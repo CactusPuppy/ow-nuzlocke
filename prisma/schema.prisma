@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HeroStatus {
+  incomplete
+  knocked_out
+  completed
+}
+
+enum RunStatus {
+  in_progress
+  complete
+}
+
+enum OverwatchHeroRole {
+  tank
+  damage
+  support
+}
+
+model OverwatchHero {
+  name          String     @id
+  role          OverwatchHeroRole
+
+  runStatuses   NuzlockeRunHeroStatus[]
+}
+
+model NuzlockeRun {
+  id            Int                       @id @default(autoincrement())
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+  title         String                    @db.VarChar(255)
+  status        RunStatus
+  heroStatuses  NuzlockeRunHeroStatus[]
+  runner        User                      @relation(fields: [runnerId], references: [id])
+  runnerId      Int
+}
+
+model NuzlockeRunHeroStatus {
+  @@unique([runId, heroName])
+  run       NuzlockeRun       @relation(fields: [runId], references: [id])
+  runId     Int
+  hero      OverwatchHero     @relation(fields: [heroName], references: [name])
+  heroName  String
+  status    HeroStatus
+}
+
+model User {
+  id            Int     @id @default(autoincrement())
+  username      String  @unique
+  runs          NuzlockeRun[]
+}
